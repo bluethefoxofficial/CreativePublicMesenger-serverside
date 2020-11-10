@@ -302,6 +302,8 @@ function login($link){
                             $sql = "INSERT INTO tokens (userid, token, username) VALUES ('$id', '$randomtoken', '$username')";
 
                             if(mysqli_query($link, $sql)){
+                                mkdir("../../cdn.csoftware.cf/enc/data/". $username);
+                                file_put_contents("../../cdn.csoftware.cf/enc/data/". $username. "/index.php", " ");
 
                                 echo json_encode(
 
@@ -445,7 +447,7 @@ function listgroups($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -485,7 +487,7 @@ $tempdataa = $row;
 
 if (mysqli_num_rows($result) > 0) {
 
-  // output data of each row
+  
 
   while($roww = mysqli_fetch_assoc($result)) {
 
@@ -547,7 +549,7 @@ function UAC($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -581,7 +583,7 @@ function UAC($link){
 
 
 
-    // output data of each row
+    
 
     while($row = mysqli_fetch_assoc($result)) {
 
@@ -650,9 +652,14 @@ updatebio($link);
 break;
 case "getmessages":
 
-getmessages($link);
-
+    getmessages($link);
+    
 break;
+case "getmembers":
+
+    getmembers($link);
+    
+    break;
 case "sendmessage":
 
 sendmessage($link);
@@ -671,6 +678,16 @@ case "deletegroup":
     case "memberslist":
 
         memberslist($link);
+        
+    break;
+    case "upload":
+
+        upload($link);
+        
+    break;
+    case "deletemessage":
+
+        deletemessage($link);
         
     break;
     
@@ -731,7 +748,7 @@ function updatebio($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -800,7 +817,7 @@ function joingroup($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -839,7 +856,7 @@ function joingroup($link){
     $groupid = $row['ID'];
     $result = null;
 
-    if(str_contains($row['members'], $un)){
+    if(strpos($row['members'], $un)){
         echo json_encode(
 
             array(
@@ -914,7 +931,7 @@ function getmessages($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -955,11 +972,12 @@ $tempdataa = $row;
 
 if (mysqli_num_rows($result) > 0) {
 
-  // output data of each row
+  
 
   while($roww = mysqli_fetch_assoc($result)) {
 
     $messages[] = $roww;
+
 
   }
 
@@ -1013,7 +1031,7 @@ function sendmessage($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -1083,7 +1101,7 @@ function groupcreation($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -1203,7 +1221,7 @@ function leave($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -1278,7 +1296,7 @@ function delete($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+        
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -1314,7 +1332,7 @@ function delete($link){
 
     if (mysqli_num_rows($results) > 0) {
 
-        // output data of each row
+     
 
         while($row = mysqli_fetch_assoc($results)) {
 
@@ -1364,6 +1382,18 @@ function delete($link){
 
     $sql = "DELETE FROM `groups` WHERE `groups`.`ID` = $serverid";
      mysqli_query($link, $sql);
+
+     $sql = "SELECT *  FROM `messages` WHERE `file` IS NOT NULL AND `serverid`=$serverid";
+     $result = mysqli_query($link, $sql);
+     if (mysqli_num_rows($result) > 0) {
+        
+        while($row = mysqli_fetch_assoc($result)) {
+          unlink("../../cdn.csoftware.cf/enc/data/". $row['sender']. "/". $row['file']);
+        }
+      } else {
+        
+      }
+      
      $sql = "DELETE FROM `messages` WHERE `messages`.`serverid` = $serverid;";
      mysqli_query($link, $sql);
 
@@ -1425,20 +1455,14 @@ $usernameget = strip_tags(stripslashes($_GET['username']));
     $results = mysqli_query($link, $sql);
 
     $tempdata = array();
+    $row = mysqli_fetch_assoc($results);
+    $emailget = $row['email'];
+    //$im=imagecreatefromjpeg(get_gravatar($emailget, 500,"mp","x"));
+    $size = 500;
+    $gravatar_url = "http://www.gravatar.com/avatar/" . md5(strtolower(trim($emailget))) . "?s=" . $size. "&d=mp";
+    header("content-type: image/jpeg");
+    echo file_get_contents($gravatar_url);
 
-    if (mysqli_num_rows($results) > 0) {
-
-        // output data of each row
-
-        while($row = mysqli_fetch_assoc($results)) {
-
-           $emailget = $row['email'];
-
-        }
-    }
-    $im=imagecreatefromjpeg("https://www.gravatar.com/avatar/". md5($emailget) ."?s=500");
-    header('Content-type:image/jpeg');
-    imagejpeg($im);
 
 }
 
@@ -1469,7 +1493,7 @@ function memberslist($link){
   
       if (mysqli_num_rows($results) > 0) {
   
-          // output data of each row
+          
   
           while($row = mysqli_fetch_assoc($results)) {
   
@@ -1511,7 +1535,7 @@ function memberslist($link){
   
   if (mysqli_num_rows($result) > 0) {
   
-    // output data of each row
+    
   
     while($roww = mysqli_fetch_assoc($result)) {
   
@@ -1550,7 +1574,7 @@ function memberstatus($link){
   
       if (mysqli_num_rows($results) > 0) {
   
-          // output data of each row
+          
   
           while($row = mysqli_fetch_assoc($results)) {
   
@@ -1592,7 +1616,7 @@ function memberstatus($link){
   
   if (mysqli_num_rows($result) > 0) {
   
-    // output data of each row
+    
   
     while($roww = mysqli_fetch_assoc($result)) {
   
@@ -1608,7 +1632,6 @@ function memberstatus($link){
 
     while($roww = mysqli_fetch_assoc($result)) {
         
-     //   if($roww['lastseen'] >= time()-20) { echo "online"; } else {echo "offline"; }
         echo json_encode($roww);
     
       }
@@ -1635,3 +1658,401 @@ function memberstatus($link){
   }
   
   }
+
+  //
+  //
+  //    Upload FILE (image)
+  //
+  //
+  //
+  //
+  //
+
+  function upload($link){
+
+   
+
+    $token = strip_tags(stripslashes($_POST['token']));
+  
+      $sql = "SELECT * FROM tokens WHERE token = '$token'";
+  
+      $results = mysqli_query($link, $sql);
+  
+      $tempdataa = array();
+  
+      if (mysqli_num_rows($results) > 0) {
+  
+          
+  
+          while($row = mysqli_fetch_assoc($results)) {
+  
+  $tempdataa = $row;
+  
+          }
+  
+          
+  
+      } else {
+  
+          echo json_encode(
+  
+              array(
+  
+                  'code' => 58757,
+  
+                  'error' => 'User token is invalid.',
+  
+                  'data' => null
+  
+              ));
+  
+      }
+  
+  
+  
+      $groups = null;
+  
+      $un =  $tempdataa['username'];
+
+
+
+
+      // file upload 1
+
+
+
+      $target_dir = "../../cdn.csoftware.cf/enc/data/". $un. "/";
+      $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
+      $uploadOk = 1;
+      $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
+      
+      // Check if image file is a actual image or fake image
+      if(isset($_POST["submit"])) {
+        $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
+        if($check !== false) {
+          $uploadOk = 1;
+        } else {
+          $uploadOk = 0;
+          echo json_encode(
+  
+            array(
+
+                'error' => 'Fake image',
+
+                'data' => null
+
+            ));
+          return;
+        }
+      }
+      
+      // Allow certain file formats
+if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
+&& $imageFileType != "gif" && $imageFileType != "pic" && $imageFileType != "apng" ) {
+    echo json_encode(
+  
+        array(
+
+            'error' => 'invalid file format',
+
+            'data' => null
+
+        ));
+  $uploadOk = 0;
+}
+      // Check file size
+      if ($_FILES["fileToUpload"]["size"] > 500000000) {
+        echo json_encode(
+  
+            array(
+                'error' => 'file size to large',
+
+                'data' => null
+
+            ));
+        $uploadOk = 0;
+
+        return;
+      }
+      
+      // Check if $uploadOk is set to 0 by an error
+      if ($uploadOk == 0) {
+        echo json_encode(
+  
+            array(
+
+                'error' => 'Unknown error',
+
+                'data' => null
+
+            ));
+
+        return;
+      // if everything is ok, try to upload file
+      } else {
+        if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
+            $str = generateRandomString(40). "_";
+            if($imageFileType == "gif"){
+
+            }else{
+            $img = new Imagick($target_file);
+            $img->stripImage();
+            $img->setImageDelay(10);
+            $img->writeImage($target_file);
+            }
+            rename($target_file,$target_dir. strip_tags(stripcslashes( basename( $str. $_FILES["fileToUpload"]["name"] ))));
+          // removeExif($target_file, $target_dir. strip_tags(stripcslashes( basename( $str. $_FILES["fileToUpload"]["name"] ))));
+            $name = strip_tags(stripcslashes( basename( $str.$_FILES["fileToUpload"]["name"])));
+
+            echo json_encode(
+  
+                array(
+                    'data' => 'Done'
+    
+                ));
+        } else {
+          return;
+        }
+      }
+
+
+      //file upload 0
+  
+      $currentserver = strip_tags(stripcslashes($_POST['serverid']));
+      $msg = 'Your version of enclica doesnt support EncFiles, Please update your client to the latest version.';
+      if($msg == ""){
+          return;
+      }
+      $randomNumber = rand(0,9999999); 
+      $time = time();
+  
+      $msgsql = "INSERT INTO `messages` (`ID`, `sender`, `time`, `edited`, `chat_type`, `serverid`, `message`,`file`) VALUES ('$randomNumber', '$un', $time, '0', '1', '$currentserver', '$msg','$name'); ";
+  
+      mysqli_query($link, $msgsql);
+  
+  
+      echo json_encode($_POST);
+  
+  }
+
+  //
+  // delete message
+  //
+  //
+
+
+  function deletemessage($link){
+    
+        $token = strip_tags(stripslashes($_GET['token']));
+    
+        $sql = "SELECT * FROM tokens WHERE token = '$token'";
+    
+        $results = mysqli_query($link, $sql);
+    
+        $tempdata = array();
+    
+        if (mysqli_num_rows($results) > 0) {
+    
+            
+    
+            while($row = mysqli_fetch_assoc($results)) {
+    
+               $tempdata[] = $row;
+    
+            }
+    
+            
+    
+        } else {
+    
+            echo json_encode(
+    
+                array(
+    
+                    'code' => 58757,
+    
+                    'error' => 'User token is invalid.',
+    
+                    'data' => null
+    
+                ));
+    
+             
+    
+        }
+        $mid = strip_tags(stripslashes($_GET['messageid']));
+        $sql = "SELECT * FROM `messages` WHERE `messages`.`ID` = '$mid'";
+    
+        $results = mysqli_query($link, $sql);
+    
+        
+        $outputdata;
+        $un;
+    
+        if (mysqli_num_rows($results) > 0) {
+    
+            
+    
+            while($row = mysqli_fetch_assoc($results)) {
+    
+              $un[] = $row['sender'];
+              $outputdata[] =$row;
+            }
+    
+            
+    
+        } else {
+
+
+    
+            echo json_encode(
+    
+                array(
+    
+                    'code' => 58757,
+    
+                    'error' => 'Invalid Message IDentifier.',
+    
+                    'data' => null
+    
+                ));
+    
+             return;
+    
+        }
+
+        if($un[0] == $tempdata[0]['username']){
+
+        }else{
+            echo json_encode(
+    
+                array(
+    
+                    'code' => 58757,
+    
+                    'error' => 'UN is not the same as sender. '. $un,
+    
+                    'data' => $un. $tempdata[0]['username']
+    
+            ));
+
+            return;
+        }
+        
+        
+      //  $un =  $tempdata[0]['username'];
+
+        
+        unlink("../../cdn.csoftware.cf/enc/data/". $un[0] . "/". strip_tags(stripslashes($_GET['file'])));
+         $sql = "DELETE FROM `messages` WHERE `messages`.`ID` = $mid;";
+         mysqli_query($link, $sql);
+
+         
+            
+         
+    
+         echo json_encode(
+    
+            array(
+    
+                'code' => 200,
+    
+                'datamsg' => 'Success hopefully',
+    
+                'data' => $outputdata
+    
+            ));
+    
+    
+    
+            
+    }
+
+    //
+    //
+    // getmembers
+    //
+    //
+
+function getmembers($link){
+
+   
+
+    $token = strip_tags(stripslashes($_GET['token']));
+
+    $sql = "SELECT * FROM tokens WHERE token = '$token' LIMIT 30";
+
+    $results = mysqli_query($link, $sql);
+
+    $tempdataa = array();
+
+    if (mysqli_num_rows($results) > 0) {
+
+        
+
+        while($row = mysqli_fetch_assoc($results)) {
+
+$tempdataa = $row;
+
+        }
+
+        
+
+    } else {
+
+        echo json_encode(
+
+            array(
+
+                'code' => 58757,
+
+                'error' => 'User token is invalid.',
+
+                'data' => null
+
+            ));
+
+    }
+
+
+
+    $groups = null;
+
+    $un =  $tempdataa['username'];
+    $currentserver = strip_tags(stripcslashes($_GET['serverid']));
+
+    $msgsql = "SELECT * FROM `groups` WHERE `ID`='$currentserver'";
+
+    $result = mysqli_query($link, $msgsql);
+
+
+
+if (mysqli_num_rows($result) > 0) {
+
+  
+
+  while($roww = mysqli_fetch_assoc($result)) {
+
+    $members = explode(" ",$roww['members']);
+
+
+  }
+
+  echo json_encode($members);
+
+
+
+} else {
+
+    json_encode(
+
+        array(
+
+            'data' => 'No messages.'
+
+        )
+
+    );
+}
+
+}
