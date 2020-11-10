@@ -89,7 +89,7 @@ if( isset($_POST['key']) )
 
     }
 
-    include("../server/config.php");
+    include("server/config.php");
 
 
 
